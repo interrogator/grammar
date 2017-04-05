@@ -181,20 +181,18 @@ class PerceptronTagger(TaggerI):
             c = 0
             n = 0
             for sentence in self._sentences:
-                words, tags = zip(*sentence)
                 
                 prev, prev2 = self.START
-                context = self.START + [self.normalize(w) for w in words] \
-                                                                    + self.END
-                for i, word in enumerate(words):
+                context = self.START + [self.normalize(w) for w in sentence[:,0]] + self.END
+                for i, (word, tag) in enumerate(sentence):
                     guess = self.tagdict.get(word)
                     if not guess:
                         feats = self._get_features(i, word, context, prev, prev2)
                         guess = self.model.predict(feats)
-                        self.model.update(tags[i], guess, feats)
+                        self.model.update(tag, guess, feats)
                     prev2 = prev
                     prev = guess
-                    c += guess == tags[i]
+                    c += guess == tag
                     n += 1
             random.shuffle(self._sentences)
             logging.info("Iter {0}: {1}/{2}={3}".format(iter_, c, n, _pc(c, n)))
@@ -209,7 +207,7 @@ class PerceptronTagger(TaggerI):
             with open(save_loc, 'wb') as fout:
                 # changed protocol from -1 to 2 to make pickling Python 2 compatible
                 pickle.dump((self.model.weights, self.tagdict, self.classes), fout, 2)
-        
+
 
     def load(self, loc):
         '''
@@ -308,7 +306,7 @@ def _load_data_conll_format(filename):
             sentence.append((word,tag)) 
         return sentences
 
-def _load_data(path, feature):
+def _load_data(path):
     from corpkit.corpus import Corpus
     from corpkit.conll import path_to_df
     from corpkit.dictionaries.word_transforms import taglemma
@@ -319,10 +317,6 @@ def _load_data(path, feature):
     else:
         df = Corpus(path)[:100].load(multiprocess=3)[['w', 'p']]
     return df
-    if feature == 'wc':
-        df['wc'] = df['p'].apply(lambda x: taglemma.get(x.lower(), x).title())
-    array = [y.values for x, y in df[['w', feature]].groupby(level=['file', 's'])]
-    return [list(x) for x in array]
 
 def _get_pretrain_model():
     # Train and test on English part of ConLL data (WSJ part of Penn Treebank)
@@ -343,3 +337,25 @@ def _get_pretrain_model():
 if __name__ == '__main__':
     #_get_pretrain_model()
     pass
+
+def _tagger(row, df):
+    """
+    For a Pandas apply
+    """
+    from corpkit.conll import sentence
+    sentence = sentence(row, df)
+    i = row['_n']
+    word = row['w']
+    tag = row['wc']
+    prev, prev2 = self.START
+    context = self.START + [self.normalize(w) for w in sentence[:,0]] + self.END
+    guess = self.tagdict.get(word)
+    if not guess:
+        feats = self._get_features(i, word, context, prev, prev2)
+        guess = self.model.predict(feats)
+        self.model.update(tag, guess, feats)
+    prev2 = prev
+    prev = guess
+    c += guess == tag
+    n += 1
+    return SOMETHING

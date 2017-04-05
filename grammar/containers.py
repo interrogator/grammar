@@ -2,6 +2,7 @@ from grammar.objects import Token
 from grammar.wordclasses import Preposition
 TRAIN_PATH = '/Users/mahsa/work/UD_English/en-ud-train.conllu'
 PICKLE = "averaged_perceptron_tagger.pickle"
+import pandas as pd
 
 class Contents(list):
     """
@@ -12,15 +13,10 @@ class Contents(list):
         super(Contents, self).__init__(realisation)
 
 class Text(Contents):
-
     """
-    The broadest part of the model
+    The broadest part of the model---runs all annotators
     """
     def __init__(self, realisation=None):
-        from grammar.annotators.tagger import PerceptronTagger, _load_data
-        tagger = PerceptronTagger()
-        training = _load_data(TRAIN_PATH, feature='wc')
-        tagger.train(training, PICKLE)
         if realisation is not None and not isinstance(realisation, Contents):
             realisation = self.realise(realisation)
         super(Text, self).__init__(self.model, realisation)
