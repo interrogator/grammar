@@ -308,27 +308,37 @@ def _load_data_conll_format(filename):
             sentence.append((word,tag)) 
         return sentences
 
-def _load_data(path):
+def _load_data(path, feature):
     from corpkit.corpus import Corpus
+    from corpkit.conll import path_to_df
     from corpkit.dictionaries.word_transforms import taglemma
     #df = path_to_df(filename)
-    df = Corpus(path)[:100].load(multiprocess=3)[['w', 'p']]
-    df['wc'] = df['p'].apply(lambda x: taglemma.get(x.lower(), x).title())
-    return df[['w', 'wc']]
+    import os
+    if os.path.isfile(path):
+        df = path_to_df(path)
+    else:
+        df = Corpus(path)[:100].load(multiprocess=3)[['w', 'p']]
+    return df
+    if feature == 'wc':
+        df['wc'] = df['p'].apply(lambda x: taglemma.get(x.lower(), x).title())
+    array = [y.values for x, y in df[['w', feature]].groupby(level=['file', 's'])]
+    return [list(x) for x in array]
 
 def _get_pretrain_model():
     # Train and test on English part of ConLL data (WSJ part of Penn Treebank)
     # Train: section 2-11 
     # Test : section 23
     tagger = PerceptronTagger()
-    data = _load_data('/Users/danielmcdonald/work/risk/all/eng-parsed/NYT')
-    half = len(data) // 5
-    training = data[:half*4]
-    testing = data[half*4+1:]
+    training = _load_data('/Users/mahsa/work/UD_English/en-ud-train.conllu')
+    testing = _load_data('/Users/mahsa/work/UD_English/en-ud-dev.conllu')
+    #half = len(data) // 5
+    #training = data[:half*4]
+    #testing = data[half*4+1:]
     print ('Size of training and testing (sentence)', len(training), len(testing))
     # Train and save the model 
     tagger.train(training, PICKLE) 
-    print ('Accuracy : ',tagger.evaluate(testing))
+    print ('Accuracy : ', tagger.evaluate(testing))
+    return tagger
     
 if __name__ == '__main__':
     #_get_pretrain_model()

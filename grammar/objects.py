@@ -8,20 +8,35 @@ So, we need to create a feature hierarchy, keeping systems discrete.We still
 want everything to be machine learnable, though, and never rule-based
 """
 #
-from grammar.features import *
+from grammar.features import CategoricalFeature
 from grammar.wordclasses import Noun, Verb, Adjective, Adverb, Determiner, Preposition, WordClass
 
-wcdict=dict(noun=Noun,verb=Verb,adjective=Adjective, adverb=Adverb,
-            determiner=Determiner, preposition=Preposition, wordClass=WordClass)
+wcdict=dict(noun=Noun, verb=Verb, adjective=Adjective, adverb=Adverb,
+            determiner=Determiner, preposition=Preposition, WordClass=WordClass)
+
+nltktag = dict(noun='n', adjective='a', adverb='r', verb='v')
+
+from nltk.stem import WordNetLemmatizer
+lemmatiser = WordNetLemmatizer()
 
 class Token(object):
     """
     Model token in a sentence
     """
-    def __init__(self, form, index, lemma=None, wordclass=None):
+    def __init__(self, parent, realisation=None):
 
-        self.form = form
-        self.index = index
-        self.lemma = CategoricalFeature(self, lemma)
-        self.wordclass = wcdict.get(wordclass)(self)
-        #self.regular = BooleanFeature(self)
+        self.parent = parent # Sentence
+        if not realisation:
+            return
+        self.form = realisation
+        wc, cert = self._get('wordclass', form, parent)
+        self.wordclass = CategoricalFeature(self, wc, certainty=cert)
+        lem = lemmatiser.lemmatize(realisation, nltktag.get(wc.lower()))
+        self.lemma = CategoricalFeature(self, lem)
+        self.regular = BooleanFeature(self, self.lemma == self.realisation)
+
+    def _get(self, feature, form, parent):
+        analysis = False
+        certainty = 0
+        #models[feature]
+        return (analysis, certainty)
