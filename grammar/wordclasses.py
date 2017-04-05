@@ -12,6 +12,12 @@ class WordClass(object):
         is_open = self.realisation in OPEN_CLASSES
         self.open = BooleanFeature(self, is_open)
 
+
+    def __repr__(self):
+        s = str(self.__dict__)
+        form = '{form}({feat}'
+        return form.format(form=self.realisation.title(),feat=s)
+
 class Noun(WordClass):
 
     def __init__(self, parent, realisation=None):
@@ -35,7 +41,7 @@ class Adjective(WordClass):
 
     def __init__(self, parent, realisation=None):
         super(Adjective, self).__init__(self, 'adjective')
-        self.comparative = IntFeature()
+        #self.comparative = IntFeature()
 
 class Adverb(WordClass):
 
@@ -45,6 +51,10 @@ class Adverb(WordClass):
 class Preposition(WordClass):
     def __init__(self, parent, realisation=None):
         super(Preposition, self).__init__(self, 'preposition')
+
+class Determiner(WordClass):
+    def __init__(self, parent, realisation=None):
+        super(Determiner, self).__init__(self, 'determiner')
 
 class Pronoun(WordClass):
     def __init__(self, parent, realisation=None):

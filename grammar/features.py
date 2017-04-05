@@ -14,6 +14,9 @@ class Feature(object):
         else:
             self.realisation = self.determine()
 
+    def __repr__(self):
+        return str(self.realisation)
+
     def determine(feat):
         pass
 

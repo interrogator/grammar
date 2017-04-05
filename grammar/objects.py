@@ -9,7 +9,10 @@ want everything to be machine learnable, though, and never rule-based
 """
 #
 from grammar.features import *
-from grammar.wordclasses import Noun, Verb, Adjective, Adverb, Determiner, Preposition
+from grammar.wordclasses import Noun, Verb, Adjective, Adverb, Determiner, Preposition, WordClass
+
+wcdict=dict(noun=Noun,verb=Verb,adjective=Adjective, adverb=Adverb,
+            determiner=Determiner, preposition=Preposition, wordClass=WordClass)
 
 class Token(object):
     """
@@ -20,5 +23,5 @@ class Token(object):
         self.form = form
         self.index = index
         self.lemma = CategoricalFeature(self, lemma)
-        self.wordclass = WordClass(self, wordclass)
+        self.wordclass = wcdict.get(wordclass)(self)
         #self.regular = BooleanFeature(self)
