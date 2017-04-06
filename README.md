@@ -2,17 +2,17 @@
 
 I've been thinking a bit lately about formalising a functional grammar of English. I've also been thinking about the successes and limits of these kinds of grammars, and of current NLP.
 
-It's uncontroversial now that state of the art results come from probablisitic/statistical, rather than rule-based methods. It also seems, however, that the data used to train the machine is misconceived. The current set of POS tags, for example, conflates word class, number, progressive, person, etc., all into one set of labels that gets applied to every word. How can statistical NLP improve if stats are derived from unmeaningful, contradictory labels?
+It's uncontroversial now that state of the art results come from probablisitic/statistical, rather than rule-based methods. It also seems, however, that the data used to train the machine is misconceived. Many POS annotation schemes, for example, conflate word class, number, progressive, person, etc., all into one set of labels. How can statistical NLP improve if stats are derived from unmeaningful, overlapping, or even contradictory labels?
 
-So, I had the idea of a system that typologises features as is done in systemic grammars. Features that are known are assigned; unknown features are determined statistically, referring to a (non-existent) corpus/treebank with nice, discrete annotations. I'm not the first to think about this, but I want to try an implementation that is bidirectional between parsing and generation, and able to take context into account.
+So, I had the idea of a system that typologises features as is done in systemic grammars. Features that are known are assigned; unknown features are determined statistically, referring to a (non-existent?) corpus/treebank with nice, discrete annotations. I'm not the first to think about this, but I want to try an implementation that is bidirectional between parsing and generation, and able to take context into account.
 
-The system involves a great deal of class inheritance, based on the idea of a few primitives:
+The system is to involve a great deal of class inheritance, based on the idea of a few primitives:
 
 * `Container/Contents`, a holder of objects
 * `Object`, a thing that is discrete and realised
 * `Feature`, an attribute of ojects, which may be boolean, categorical, numerical...
 
-Right now, the only implemented part is a Averaged Perceptron annotator for arbitrary word-level features.
+Right now, the only implemented part is a Averaged Perceptron annotator for arbitrary word-level features. Maybe I need to use a neural net instead, though. Anyway, it is described below.
 
 ## Word feature annotator
 
