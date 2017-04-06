@@ -41,8 +41,9 @@ def make_models(path='en-ud-train.conllu', just_features=False, save="word-model
 
 def add_layer(df, feature, taggers, lemmatiser=False):
     from grammar.config import RESTRICTIONS
+    import pandas as pd
     if feature == 'l':
-        subdf = df[df['x'].isin(['NOUN', 'VERB', 'ADJ', 'ADV'])]
+        subdf = df[df['x'].isin(['NOUN', 'VERB', 'ADJ', 'ADV'])].copy()
         subdf['_tags'] = subdf['x'].str.replace('ADJ', 'r').str.slice(0, 1).str.lower()
         df[feature] = subdf[['w', '_tags']].apply(lambda x: lemmatiser.lemmatize(*x), raw=True, axis=1)
         df[feature] = df[feature].fillna(df['w'])
@@ -78,25 +79,4 @@ def process(string, taggers):
     return df
 
 #%prun -s cumulative -l 50 taggers = make_models()
-#df = process('This is the bit of my text. Here is a second sentence. The third is the last. Actually, it is not. I am going to add some more text so that hopefully I can understand the nature of the problem. London was hit by a storm. If it were the case, that would be a subjunctive. Do you like interrogatives? Why wouldn\'t you?', taggers)
-
-
-class Grammar(object):
-
-    def __init__(self):
-        self._model = False
-
-    def model(self, **kwargs):
-        self._model = make_models(**kwargs)
-        return self._model
-
-    def evaluate(self, **kwargs):
-        from grammar.tagger import evaluate
-        if not self._model:
-            self.model(**kwargs)
-        return evaluate(self.model, kwargs.get('training_data', False))
-
-    def process(self, string, **kwargs):
-        if not self._model:
-            self.model(**kwargs)
-        return process(string, self._model)
+#df = g.process('This is the bit of my text. Here is a second sentence. The third is the last. Actually, it is not. I am going to add some more text so that hopefully I can understand the nature of the problem. London was hit by a storm. If it were the case, that would be a subjunctive. Do you like interrogatives? Why wouldn\'t you?', taggers)

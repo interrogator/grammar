@@ -40,3 +40,31 @@ class Token(object):
         certainty = 0
         #models[feature]
         return (analysis, certainty)
+
+class Grammar(object):
+
+    def __init__(self, load="try"):
+        if not load:
+            self._model = False
+        else:
+            try:
+                self._model = self.model(load=True)
+            except:
+                self._model = False
+
+    def model(self, **kwargs):
+        from grammar.pipelines import make_models
+        self._model = make_models(**kwargs)
+        return self._model
+
+    def evaluate(self, **kwargs):
+        from grammar.tagger import evaluate
+        if not self._model:
+            self.model(**kwargs)
+        return evaluate(self.model, kwargs.get('training_data', False))
+
+    def process(self, string, **kwargs):
+        from grammar.pipelines import process
+        if not self._model:
+            self.model(**kwargs)
+        return process(string, self._model).fillna('')
