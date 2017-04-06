@@ -1,1 +1,23 @@
 OPEN_CLASSES = ['noun', 'verb', 'adjective', 'adverb']
+RESTRICTIONS = dict(PronType={'ADV', 'DET', 'NUM', 'PRON'},
+                     NumType={'ADV', 'DET', 'NUM', 'ADJ'},
+                     Poss={'DET', 'ADJ', 'PRON'},
+                     Reflex={'DET', 'PRON'},
+                     Foreign={'X'},
+                     Abbr=set(),
+                     Polarity={'VERB', "ADJ", "ADV", "AUX"},
+                     Person={'VERB', 'PRON', 'DET', "AUX"},
+                     Polite={'VERB', "AUX"},
+                     Gender={'NOUN', "PRON"},
+                     Animacy={'NOUN', "PRON", "ADJ", "DET", "NUM", "VERB"},
+                     Number={'PRON', 'ADJ', 'DET', 'NUM', 'VERB'},
+                     Case={'NOUN', "PRON"},
+                     Definite={'NOUN', "DET"},
+                     Degree={'NOUN', "ADJ", "ADV"},
+                     VerbForm={'VERB', 'NOUN', 'ADJ', 'ADV', "AUX"},
+                     Mood={'VERB', "AUX"},
+                     Tense={'VERB', 'NOUN', 'ADJ', 'ADV', "AUX"},
+                     Aspect={'VERB', 'NOUN', 'ADJ', 'ADV', "AUX"},
+                     Voice={'VERB', 'NOUN', 'ADJ', 'ADV', "AUX"},
+                     Evident={'VERB', "AUX"})
+

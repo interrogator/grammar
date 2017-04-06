@@ -18,6 +18,8 @@ import pickle
 import logging
 
 from nltk.tag.api import TaggerI
+from nltk.metrics import accuracy
+from itertools import chain
 from nltk.data import find, load
 from nltk.compat import python_2_unicode_compatible
 
@@ -158,7 +160,8 @@ class PerceptronTagger(TaggerI):
             prev = tag
 
         return output
-    def train(self, sentences, save_loc=None, nr_iter=5):
+
+    def train(self, sentences, feature=False, save_loc=None, nr_iter=5):
         '''Train a model from sentences, and save it at ``save_loc``. ``nr_iter``
         controls the number of Perceptron training iterations.
         :param sentences: A list or iterator of sentences, where each sentence
@@ -172,30 +175,36 @@ class PerceptronTagger(TaggerI):
         # it populate ``self._sentences`` (a list) with all the sentences.
         # This saves the overheard of just iterating through ``sentences`` to
         # get the list by ``sentences = list(sentences)``.
-
+        from grammar.config import RESTRICTIONS
         self._sentences = list()  # to be populated by self._make_tagdict...
         self._make_tagdict(sentences)
         self.model.classes = self.classes
+        sentences = list(sentences)
+        
         for iter_ in range(nr_iter):
             c = 0
             n = 0
-            for sentence in self._sentences:
-                words, tags = zip(*sentence)
-                
+            for _, sentence in sentences:
+                words = sentence['w']
                 prev, prev2 = self.START
                 context = self.START + [self.normalize(w) for w in words] \
                                                                     + self.END
-                for i, word in enumerate(words):
+                for i, (word, tag, xpos) in enumerate(sentence.values):
+                    #xpos = df.iloc[n]['x']
+                    poss_pos = RESTRICTIONS.get(feature, False)
+                    if poss_pos and xpos not in poss_pos and feature not in ['x', 'p']:
+                        n += 1
+                        continue
                     guess = self.tagdict.get(word)
                     if not guess:
-                        feats = self._get_features(i, word, context, prev, prev2)
+                        feats = self._get_features(i, word, context, prev, prev2, feature)
                         guess = self.model.predict(feats)
-                        self.model.update(tags[i], guess, feats)
+                        self.model.update(tag, guess, feats)
                     prev2 = prev
                     prev = guess
-                    c += guess == tags[i]
+                    c += guess == tag
                     n += 1
-            random.shuffle(self._sentences)
+            random.shuffle(sentences)
             logging.info("Iter {0}: {1}/{2}={3}".format(iter_, c, n, _pc(c, n)))
 
         # We don't need the training sentences anymore, and we don't want to
@@ -237,7 +246,7 @@ class PerceptronTagger(TaggerI):
         else:
             return word.lower()
 
-    def _get_features(self, i, word, context, prev, prev2):
+    def _get_features(self, i, word, context, prev, prev2, feature=False):
         '''Map tokens into a feature representation, implemented as a
         {hashable: int} dict. If the features change, a new model must be
         trained.
@@ -270,9 +279,9 @@ class PerceptronTagger(TaggerI):
         :param sentences: A list of list of (word, tag) tuples.
         '''
         counts = defaultdict(lambda: defaultdict(int))
-        for sentence in sentences:
+        for _, sentence in sentences:
             self._sentences.append(sentence)
-            for word, tag in sentence:
+            for word, tag, xpos in sentence.values:
                 counts[word][tag] += 1
                 self.classes.add(tag)
         freq_thresh = 20
@@ -316,7 +325,7 @@ def _load_data(path):
     if os.path.isfile(path):
         df = path_to_df(path)
     else:
-        df = Corpus(path)[:100].load(multiprocess=3)[['w', 'p']]
+        df = Corpus(path).load(multiprocess=3)
     return df
 
 def _get_pretrain_model():
@@ -326,18 +335,30 @@ def _get_pretrain_model():
     tagger = PerceptronTagger()
     training = _load_data('/Users/mahsa/work/UD_English/en-ud-train.conllu')
     testing = _load_data('/Users/mahsa/work/UD_English/en-ud-dev.conllu')
-    #half = len(data) // 5
-    #training = data[:half*4]
-    #testing = data[half*4+1:]
     print ('Size of training and testing (sentence)', len(training), len(testing))
     # Train and save the model 
     tagger.train(training, PICKLE) 
     print ('Accuracy : ', tagger.evaluate(testing))
     return tagger
     
-if __name__ == '__main__':
-    #_get_pretrain_model()
-    pass
+def evaluate(taggers, testing_data='en-ud-dev.conllu'):
+    from nltk.metrics import accuracy
+    from itertools import chain
+    if isinstance(taggers, str):
+        import pickle
+        import os
+        with open(taggers, "rb") as fo:
+            taggers = pickle.load(fo)
+    if isinstance(testing_data, str):
+        from corpkit.conll import path_to_df
+        testing_data = path_to_df(testing_data)
+    for feat, tagger in taggers.items():
+        test_bit = testing_data[['w', feat, 'x']]
+        untagged = [d.astype(object).values.tolist() for x, d in test_bit['w'].groupby(level=['file', 's'])]
+        retagged_sents = tagger.tag_sents(untagged)
+        gold_tokens = [tuple(i) for i in test_bit[['w', feat]].values.tolist()]
+        test_tokens = list(chain(*retagged_sents))
+        print ('%s Accuracy: ' % feat, accuracy(gold_tokens, test_tokens))
 
 def _tagger(row, df):
     """
