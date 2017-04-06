@@ -158,7 +158,6 @@ class PerceptronTagger(TaggerI):
             prev = tag
 
         return output
-
     def train(self, sentences, save_loc=None, nr_iter=5):
         '''Train a model from sentences, and save it at ``save_loc``. ``nr_iter``
         controls the number of Perceptron training iterations.
@@ -181,18 +180,20 @@ class PerceptronTagger(TaggerI):
             c = 0
             n = 0
             for sentence in self._sentences:
+                words, tags = zip(*sentence)
                 
                 prev, prev2 = self.START
-                context = self.START + [self.normalize(w) for w in sentence[:,0]] + self.END
-                for i, (word, tag) in enumerate(sentence):
+                context = self.START + [self.normalize(w) for w in words] \
+                                                                    + self.END
+                for i, word in enumerate(words):
                     guess = self.tagdict.get(word)
                     if not guess:
                         feats = self._get_features(i, word, context, prev, prev2)
                         guess = self.model.predict(feats)
-                        self.model.update(tag, guess, feats)
+                        self.model.update(tags[i], guess, feats)
                     prev2 = prev
                     prev = guess
-                    c += guess == tag
+                    c += guess == tags[i]
                     n += 1
             random.shuffle(self._sentences)
             logging.info("Iter {0}: {1}/{2}={3}".format(iter_, c, n, _pc(c, n)))
