@@ -19,8 +19,8 @@ Right now, the only implemented part is a Averaged Perceptron annotator for arbi
 Download [CONLL-U data](http://universaldependencies.org/format.html) for training:
 
 ```shell
-curl -O https://github.com/UniversalDependencies/UD_English/raw/master/en-ud-train.conllu
-curl -O https://github.com/UniversalDependencies/UD_English/raw/master/en-ud-dev.conllu
+curl -O https://raw.githubusercontent.com/UniversalDependencies/UD_English/master/en-ud-train.conllu
+curl -O https://raw.githubusercontent.com/UniversalDependencies/UD_English/master/en-ud-dev.conllu
 ```
 
 Define a text:
