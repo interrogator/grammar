@@ -189,7 +189,7 @@ class PerceptronTagger(TaggerI):
                 prev, prev2 = self.START
                 context = self.START + [self.normalize(w) for w in words] \
                                                                     + self.END
-                for i, (word, tag, xpos) in enumerate(sentence.values):
+                for i, (word, tag, xpos, s) in enumerate(sentence.values):
                     #xpos = df.iloc[n]['x']
                     poss_pos = RESTRICTIONS.get(feature, False)
                     if poss_pos and xpos not in poss_pos and feature not in ['x', 'p']:
@@ -281,7 +281,7 @@ class PerceptronTagger(TaggerI):
         counts = defaultdict(lambda: defaultdict(int))
         for _, sentence in sentences:
             self._sentences.append(sentence)
-            for word, tag, xpos in sentence.values:
+            for word, tag, xpos, s in sentence.values:
                 counts[word][tag] += 1
                 self.classes.add(tag)
         freq_thresh = 20
@@ -354,7 +354,7 @@ def evaluate(taggers, testing_data='en-ud-dev.conllu'):
         testing_data = path_to_df(testing_data)
     for feat, tagger in taggers.items():
         test_bit = testing_data[['w', feat, 'x']]
-        untagged = [d.astype(object).values.tolist() for x, d in test_bit['w'].groupby(level=['file', 's'])]
+        untagged = [d.astype(object).values.tolist() for x, d in test_bit[['w', 's']].groupby('s')]
         retagged_sents = tagger.tag_sents(untagged)
         gold_tokens = [tuple(i) for i in test_bit[['w', feat]].values.tolist()]
         test_tokens = list(chain(*retagged_sents))

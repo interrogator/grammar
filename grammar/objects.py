@@ -52,9 +52,9 @@ class Grammar(object):
             except:
                 self._model = False
 
-    def model(self, **kwargs):
+    def model(self, *args, **kwargs):
         from grammar.pipelines import make_models
-        self._model = make_models(**kwargs)
+        self._model = make_models(*args, **kwargs)
         return self._model
 
     def evaluate(self, **kwargs):
